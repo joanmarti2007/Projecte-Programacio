@@ -63,6 +63,9 @@ async function login() {
         fs.rmSync(CODE_FILE);
         await page.click('#idSubmit_SAOTCC_Continue');
       }
+    } else if (await page.getByText(/^(Ahora no|Not now|Skip for now|Omitir por ahora|Ara no)$/).first().isVisible().catch(() => false)) {
+      // "Vamos a garantizar la seguridad de la cuenta" (registrar otro método MFA) → Ahora no
+      await page.getByText(/^(Ahora no|Not now|Skip for now|Omitir por ahora|Ara no)$/).first().click();
     } else if (page.url().includes('kmsi') || await visible(page, '#KmsiCheckboxField') || await visible(page, '#KmsiDescription')) {
       await page.click('#idSIButton9'); // "¿Quiere mantener la sesión iniciada?" → Sí
     } else if (await visible(page, '#idDiv_SAOTCAS_Title') && !shownNumber) {
