@@ -16,12 +16,25 @@ node .claude/skills/uni/scripts/elisava.js download <url> <destino>     # PDF/ZI
 
 Descarga los ficheros en `/tmp/elisava/`. Para leer un PDF usa `pdftotext -layout`. Si el PDF tiene información en colores (por ejemplo, el calendario: festivos, exámenes…), lee también el PDF con la herramienta Read para verlo como imagen.
 
+## Perfil del usuario
+
+GEDI (Grado en Ingeniería de Diseño Industrial, Elisava – UVic-UCC), 1.º curso, curso 2026-27, 1.er semestre. Si no dice otra cosa, sus preguntas se refieren a estas asignaturas.
+
+Asignaturas del 1.er semestre (6 ECTS cada una; los planes docentes están en `pdas-1o-gedi-en-pdf.zip`):
+- Álgebra y Cálculo
+- Expresión Artística
+- Fundamentos de Programación
+- Materia
+- Metodologías del Diseño
+
+Las del 2.º semestre son CAD (en inglés), Estética y Diseño, Física de Materiales, Mecánica y Tecnología Eléctrica y Electrónica.
+
 ## Mapa del campus (dónde está cada cosa)
 
 | Tema | Dónde |
 |---|---|
 | Calendario académico (festivos, exámenes, entregas) | `/calendario-academico-grados/` → PDF |
-| Temario / planes docentes (PDA) de cada asignatura | `/gestion-y-documentacion-academica-grados/` → ZIP por curso y grado (`pdas-<n>o-gedi` = Grado en Diseño e Innovación, `pdas-<n>o-gdisi` = Ingeniería de Diseño Industrial) |
+| Temario / planes docentes (PDA) de cada asignatura | `/gestion-y-documentacion-academica-grados/` → ZIP por curso y grado (`pdas-<n>o-gedi` = Grado en Ingeniería de Diseño Industrial, `pdas-<n>o-gdisi` = Grado en Diseño e Innovación). Los nombres de los ficheros del ZIP tienen espacios y acentos mal codificados: recórrelos con `for f in *.pdf` y entre comillas |
 | Matrícula, automatrícula, Erasmus | `/gestion-y-documentacion-academica-grados/` → PDF |
 | Horarios de clase | enlace "Horarios de clase" de la portada → `gestioacademicavirtual.elisava.net` (consulta pública) |
 | Expediente, notas, matrícula personal | `gestioacademicavirtual.elisava.net` (desde `/expediente-academico-grado/`) |
