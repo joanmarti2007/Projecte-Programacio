@@ -69,7 +69,9 @@ async function login() {
       console.log('APROBAR_EN_AUTHENTICATOR'); shownNumber = '-';
     }
   }
-  throw new Error('Tiempo agotado esperando la aprobación');
+  const where = new URL(page.url());
+  const text = (await page.innerText('body').catch(() => '')).replace(/\s+/g, ' ').slice(0, 400);
+  throw new Error(`Tiempo agotado esperando la aprobación (en ${where.host}${where.pathname}: "${text}")`);
 }
 
 async function get(url, withLinks) {
