@@ -63,7 +63,7 @@ async function login() {
         fs.rmSync(CODE_FILE);
         await page.click('#idSubmit_SAOTCC_Continue');
       }
-    } else if (await visible(page, '#KmsiCheckboxField') || await visible(page, '#KmsiDescription')) {
+    } else if (page.url().includes('kmsi') || await visible(page, '#KmsiCheckboxField') || await visible(page, '#KmsiDescription')) {
       await page.click('#idSIButton9'); // "¿Quiere mantener la sesión iniciada?" → Sí
     } else if (await visible(page, '#idDiv_SAOTCAS_Title') && !shownNumber) {
       console.log('APROBAR_EN_AUTHENTICATOR'); shownNumber = '-';
