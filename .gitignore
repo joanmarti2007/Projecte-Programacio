@@ -1,0 +1,4 @@
+.env
+.moodle_token
+__pycache__/
+*.pdf
