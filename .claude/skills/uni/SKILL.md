@@ -1,38 +1,29 @@
 ---
 name: uni
-description: Consulta la información de la universidad del usuario. Mira el campus virtual (Moodle) para el temario, los apuntes, las entregas, el calendario y las notas, y la web pública de la facultad para los horarios, las aulas, los laboratorios y la normativa. Úsala siempre que el usuario pregunte por sus asignaturas, clases, horarios, exámenes, entregas, laboratorios o cualquier cosa de la universidad.
+description: Consulta el campus de Elisava (campus.elisava.net) para responder preguntas sobre el temario, las asignaturas, los horarios, las clases, los laboratorios, los talleres, la normativa y los avisos. Úsala siempre que el usuario pregunte por algo de la universidad.
 ---
 
-# Consultas de la universidad
+# Consultas al campus de Elisava
 
-Hay dos fuentes. Responde siempre con datos sacados de ellas y nunca te los inventes.
+El campus es una web WordPress protegida con el login de Microsoft de Elisava. Responde siempre con datos sacados de ella y nunca te los inventes.
 
-## 1. Campus virtual (Moodle, con login)
+## Leer páginas
 
-`python3 .claude/skills/uni/scripts/moodle.py <comando>` devuelve JSON:
+`node .claude/skills/uni/scripts/elisava.js get <url|ruta> [--links]`
 
-| Pregunta del usuario | Comando |
-|---|---|
-| Qué asignaturas tengo | `courses` |
-| Temario, apuntes, prácticas de una asignatura | `contents <courseid>` |
-| Qué tengo pendiente / próximos exámenes | `calendar` y `assignments` |
-| Notas | `grades <courseid>` |
-| Leer un PDF o documento del campus | `download <fileurl> /tmp/<nombre>` y luego léelo |
+- Empieza por `/` con `--links` y navega siguiendo los enlaces relevantes (horarios, asignaturas, laboratorios, avisos).
+- Si un horario o una guía está en PDF, descárgalo y léelo.
 
-Flujo habitual: `courses` → busca el `id` de la asignatura que menciona el usuario (por nombre aproximado) → `contents <id>` → si la respuesta está dentro de un fichero, descárgalo y léelo.
+## Si sale `SESION_CADUCADA`: volver a iniciar sesión
 
-Las fechas (`time`, `duedate`) son timestamps Unix: conviértelas a fecha legible en hora local (Europe/Madrid).
+1. Lanza `node .claude/skills/uni/scripts/elisava.js login` con Monitor y filtra `NUMERO|CODIGO|APROBAR|LOGIN_OK|ERROR`.
+2. Si sale `NUMERO: <n>`, díselo al usuario de forma bien visible y mándale también una notificación push para que lo escriba en Microsoft Authenticator. Si sale `APROBAR_EN_AUTHENTICATOR`, dile que apruebe la solicitud.
+3. Si sale `CODIGO_REQUERIDO`, pídele el código de 6 dígitos y escríbelo en `.elisava_code`, en la raíz del repo.
+4. Si sale `LOGIN_OK`, repite la consulta.
 
-## 2. Web pública de la facultad (horarios, laboratorios, normativa)
-
-`python3 .claude/skills/uni/scripts/web.py <url> [--links]` devuelve el texto de la página.
-
-- Empieza por la portada (`/`) con `--links` y navega siguiendo los enlaces relevantes (horarios, calendario académico, laboratorios, guías docentes).
-- Las rutas relativas se resuelven contra `UNI_WEB_URL`.
-- Si un horario o una guía está en PDF, descárgalo con `curl -sL -o /tmp/x.pdf <url>` y léelo.
+Las credenciales se leen de `ELISAVA_USER` y `ELISAVA_PASSWORD`. Nunca muestres ni subas al repo las credenciales ni `.elisava_state.json`.
 
 ## Reglas
 
-- Cita de dónde sale cada dato: la asignatura y la sección, o la URL.
-- Si una fuente no responde o el login falla, dilo y no supongas nada.
-- Nunca muestres ni guardes en el repo las credenciales ni el token (`.env` y `.moodle_token` están en `.gitignore`).
+- Cita la URL de donde sale cada dato.
+- Si no encuentras algo, dilo y no lo supongas.

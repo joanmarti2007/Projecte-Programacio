@@ -1,4 +1,5 @@
 .env
-.moodle_token
 __pycache__/
 *.pdf
+.elisava_state.json
+.elisava_code
