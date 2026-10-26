@@ -1,24 +1,41 @@
 #!/usr/bin/env node
 // Acceso al campus de Elisava (campus.elisava.net) tras el login de Microsoft.
 //
-// Credenciales: variables de entorno ELISAVA_USER y ELISAVA_PASSWORD.
-// La sesión se guarda en .elisava_state.json (raíz del repo, fuera de git).
+// Credenciales: variables de entorno ELISAVA_USER y ELISAVA_PASSWORD o, si no
+// existen, el fichero ~/.config/elisava/credentials (lo crea install.sh).
+// La sesión se guarda en ~/.config/elisava/state.json.
 //
 // Uso:
 //   elisava.js login            Inicia sesión. Si Microsoft pide Authenticator,
 //                               imprime "NUMERO: <n>" y espera la aprobación.
 //                               Si pide un código, imprime "CODIGO_REQUERIDO" y
-//                               espera a que se escriba en .elisava_code.
+//                               espera a que se escriba en ~/.config/elisava/code.
 //   elisava.js get <url> [--links]   Texto de una página (y sus enlaces).
 //   elisava.js download <url> <destino>   Descarga un fichero (PDF, ZIP...) con la sesión.
 //   Ambos imprimen "SESION_CADUCADA" si hay que volver a hacer login.
-const { chromium } = require('playwright');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 
-const ROOT = path.resolve(__dirname, '../../../..');
-const STATE = path.join(ROOT, '.elisava_state.json');
-const CODE_FILE = path.join(ROOT, '.elisava_code');
+let chromium;
+try {
+  ({ chromium } = require('playwright'));
+} catch {
+  console.error(`ERROR: falta Playwright. Ejecuta: bash ${path.join(__dirname, '..', 'install.sh')}`);
+  process.exit(1);
+}
+
+const DATA = process.env.ELISAVA_DATA || path.join(os.homedir(), '.config', 'elisava');
+fs.mkdirSync(DATA, { recursive: true, mode: 0o700 });
+const STATE = path.join(DATA, 'state.json');
+const CODE_FILE = path.join(DATA, 'code');
+const CREDENTIALS = path.join(DATA, 'credentials');
+if (fs.existsSync(CREDENTIALS)) {
+  for (const line of fs.readFileSync(CREDENTIALS, 'utf8').split('\n')) {
+    const m = line.match(/^\s*(ELISAVA_\w+)\s*=\s*(.*)$/);
+    if (m && !process.env[m[1]]) process.env[m[1]] = m[2];
+  }
+}
 const CAMPUS = 'https://campus.elisava.net/';
 const TIMEOUT_MS = 180000;
 

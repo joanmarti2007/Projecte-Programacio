@@ -9,12 +9,14 @@ El campus (`campus.elisava.net`) es una web WordPress protegida con el login de 
 
 ## Comandos
 
+`<skill>` es el directorio de esta skill: `.claude/skills/uni` dentro del repo o `~/.claude/skills/uni` si está instalada en el ordenador. Si sale `falta Playwright`, dile al usuario que ejecute `bash <skill>/install.sh`.
+
 ```
-node .claude/skills/uni/scripts/elisava.js get <url|ruta> [--links]     # texto de una página
-node .claude/skills/uni/scripts/elisava.js download <url> <destino>     # PDF/ZIP con la sesión
+node <skill>/scripts/elisava.js get <url|ruta> [--links]     # texto de una página
+node <skill>/scripts/elisava.js download <url> <destino>     # PDF/ZIP con la sesión
 ```
 
-Descarga los ficheros en `/tmp/elisava/`. Para leer un PDF usa `pdftotext -layout`. Si el PDF tiene información en colores (por ejemplo, el calendario: festivos, exámenes…), lee también el PDF con la herramienta Read para verlo como imagen.
+Descarga los ficheros en `/tmp/elisava/`. Para leer un PDF usa `pdftotext -layout` si está instalado; si no, léelo con la herramienta Read. Si el PDF tiene información en colores (por ejemplo, el calendario: festivos, exámenes…), lee también el PDF con la herramienta Read para verlo como imagen.
 
 ## Perfil del usuario
 
@@ -47,12 +49,12 @@ Si no sabes dónde está algo, empieza por `get / --links` y navega. Si un domin
 
 ## Si sale `SESION_CADUCADA`: volver a iniciar sesión
 
-1. Lanza `node .claude/skills/uni/scripts/elisava.js login` con Monitor y filtra `NUMERO|CODIGO|APROBAR|LOGIN_OK|ERROR`.
+1. Lanza `node <skill>/scripts/elisava.js login` en segundo plano (con Monitor si está disponible) y vigila su salida: `NUMERO|CODIGO|APROBAR|LOGIN_OK|ERROR`.
 2. Si sale `NUMERO: <n>`, díselo al usuario de forma bien visible y mándale también una notificación push para que lo escriba en Microsoft Authenticator. Si sale `APROBAR_EN_AUTHENTICATOR`, dile que apruebe la solicitud.
-3. Si sale `CODIGO_REQUERIDO`, pídele el código de 6 dígitos y escríbelo en `.elisava_code`, en la raíz del repo.
+3. Si sale `CODIGO_REQUERIDO`, pídele el código de 6 dígitos y escríbelo en `~/.config/elisava/code`.
 4. Si sale `LOGIN_OK`, repite la consulta.
 
-Las credenciales se leen de `ELISAVA_USER` y `ELISAVA_PASSWORD`. Nunca muestres ni subas al repo las credenciales ni `.elisava_state.json`.
+Las credenciales se leen de `ELISAVA_USER` y `ELISAVA_PASSWORD` o de `~/.config/elisava/credentials`. Nunca muestres ni subas al repo las credenciales ni `~/.config/elisava/`.
 
 ## Reglas
 

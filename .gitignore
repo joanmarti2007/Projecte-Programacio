@@ -3,3 +3,5 @@ __pycache__/
 *.pdf
 .elisava_state.json
 .elisava_code
+node_modules/
+package-lock.json
