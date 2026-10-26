@@ -9,8 +9,9 @@
 //                               imprime "NUMERO: <n>" y espera la aprobación.
 //                               Si pide un código, imprime "CODIGO_REQUERIDO" y
 //                               espera a que se escriba en .elisava_code.
-//   elisava.js get <url> [--links]   Texto de una página del campus (y sus enlaces).
-//                               Imprime "SESION_CADUCADA" si hay que volver a hacer login.
+//   elisava.js get <url> [--links]   Texto de una página (y sus enlaces).
+//   elisava.js download <url> <destino>   Descarga un fichero (PDF, ZIP...) con la sesión.
+//   Ambos imprimen "SESION_CADUCADA" si hay que volver a hacer login.
 const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
@@ -83,7 +84,7 @@ async function get(url, withLinks) {
   const ctx = await browser.newContext({ storageState: STATE, locale: 'es-ES' });
   const page = await ctx.newPage();
   await page.goto(new URL(url, CAMPUS).href, { waitUntil: 'networkidle' });
-  if (new URL(page.url()).host !== 'campus.elisava.net') {
+  if (new URL(page.url()).host.startsWith('login.')) {
     console.log('SESION_CADUCADA');
   } else {
     await ctx.storageState({ path: STATE }); // refresca cookies
@@ -97,6 +98,24 @@ async function get(url, withLinks) {
   await browser.close();
 }
 
-const [cmd, arg] = process.argv.slice(2);
-(cmd === 'login' ? login() : cmd === 'get' && arg ? get(arg, process.argv.includes('--links')) : Promise.reject(new Error('Uso: elisava.js login | get <url> [--links]')))
+async function download(url, dest) {
+  if (!fs.existsSync(STATE)) { console.log('SESION_CADUCADA'); return; }
+  const browser = await chromium.launch();
+  const ctx = await browser.newContext({ storageState: STATE });
+  const res = await ctx.request.get(new URL(url, CAMPUS).href);
+  const type = res.headers()['content-type'] || '';
+  if (new URL(res.url()).host.startsWith('login.') || (type.includes('text/html') && !/\.html?$/.test(url))) {
+    console.log('SESION_CADUCADA');
+  } else {
+    fs.writeFileSync(dest, await res.body());
+    console.log(`GUARDADO: ${dest} (${type})`);
+  }
+  await browser.close();
+}
+
+const [cmd, arg, arg2] = process.argv.slice(2);
+(cmd === 'login' ? login()
+  : cmd === 'get' && arg ? get(arg, process.argv.includes('--links'))
+  : cmd === 'download' && arg2 ? download(arg, arg2)
+  : Promise.reject(new Error('Uso: elisava.js login | get <url> [--links] | download <url> <destino>')))
   .catch(e => { console.error(`ERROR: ${e.message}`); process.exit(1); });
