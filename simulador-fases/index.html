@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Calculadora interactiva de diagramas de fases (Fe-C, Cu-Ni, Pb-Sn): fases, composiciones, regla de la palanca y microestructura.">
+<title>Simulador de diagramas de fases</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: herramienta de laboratorio — diagrama grande a la izquierda, ficha de resultados a la derecha (se apila en móvil); color fijo por fase */
+:root{
+  --bg:#eef1f3; --surface:#ffffff; --fg:#17212b; --muted:#5a6772; --line:#cfd7dd; --grid:#e5e9ec;
+  --L:#2f5fb3; --L-soft:#e1e9f7; --a:#0f7a6c; --a-soft:#dcefeb; --g:#7b4bb7; --g-soft:#ece4f7; --c:#b4531a; --c-soft:#f8e6da;
+  --display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --body:"IBM Plex Sans","Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1418; --surface:#171f27; --fg:#e4eaee; --muted:#98a6b1; --line:#2c3843; --grid:#222c35;
+  --L:#7fa6ee; --L-soft:#1b2840; --a:#4cc2ae; --a-soft:#16342f; --g:#b89af0; --g-soft:#2a2140; --c:#f0965c; --c-soft:#3a2416; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1418; --surface:#171f27; --fg:#e4eaee; --muted:#98a6b1; --line:#2c3843; --grid:#222c35;
+  --L:#7fa6ee; --L-soft:#1b2840; --a:#4cc2ae; --a-soft:#16342f; --g:#b89af0; --g-soft:#2a2140; --c:#f0965c; --c-soft:#3a2416; color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(26px,4.5vw,36px);margin:0;line-height:1.1;text-wrap:balance}
+.sub{color:var(--muted);margin:0;max-width:70ch}
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.tabs button,.chip{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:5px 14px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.chip{font-size:13px;padding:3px 11px}
+.chip:hover,.tabs button:hover{border-color:var(--a)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--a);outline-offset:2px}
+.grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.chart{overflow-x:auto}
+svg#plot{display:block;width:100%;height:auto;min-width:520px;color:var(--fg);touch-action:none;cursor:crosshair;user-select:none}
+.ctrl{display:grid;grid-template-columns:auto 1fr auto;gap:8px 12px;align-items:center}
+.ctrl label{font-family:var(--mono);font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.ctrl input[type=range]{width:100%;accent-color:var(--a)}
+.ctrl input[type=number]{width:92px;font:inherit;font-family:var(--mono);font-size:14px;padding:4px 6px;border:1px solid var(--line);border-radius:5px;background:var(--bg);color:var(--fg);font-variant-numeric:tabular-nums}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.row .lbl{font-size:12px;color:var(--muted);margin-right:4px}
+.region{font-family:var(--display);font-size:22px;font-weight:700;line-height:1.2}
+.kind{font-size:13px;color:var(--muted)}
+.ph{display:grid;grid-template-columns:auto 1fr auto auto;gap:6px 12px;align-items:center;font-variant-numeric:tabular-nums}
+.ph .sw{width:12px;height:12px;border-radius:3px}
+.ph .h{font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.ph .num{font-family:var(--mono);text-align:right}
+.bar{display:flex;height:22px;border-radius:4px;overflow:hidden;border:1px solid var(--line)}
+.bar div{height:100%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;color:#fff;min-width:0;overflow:hidden;white-space:nowrap;transition:width .15s}
+.calc{font-family:var(--mono);font-size:13px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px;white-space:pre-wrap;line-height:1.65;overflow-x:auto}
+h2{font-family:var(--display);font-size:15px;font-weight:700;margin:0;letter-spacing:.01em}
+.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:3px;font-size:14px}
+.note{font-size:13px;color:var(--muted)}
+.view{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){.bar div{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Simulador de diagramas de fases</h1>
+    <p class="sub">Mueve la temperatura y la composición, o arrastra el punto sobre el diagrama. Se resuelve solo: qué fases hay, la composición de cada una (isoterma) y su porcentaje (regla de la palanca).</p>
+  </header>
+
+  <nav class="tabs" aria-label="Sistema">
+    <button type="button" id="tab-fec" data-sys="fec" aria-pressed="true">Fe‑C (aceros)</button>
+    <button type="button" id="tab-cuni" data-sys="cuni" aria-pressed="false">Cu‑Ni (solubilidad total)</button>
+    <button type="button" id="tab-pbsn" data-sys="pbsn" aria-pressed="false">Pb‑Sn (solubilidad parcial)</button>
+  </nav>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="ctrl">
+        <label for="cR" id="cLab">% C</label><input type="range" id="cR"><input type="number" id="cN" aria-labelledby="cLab">
+        <label for="tR">T (°C)</label><input type="range" id="tR"><input type="number" id="tN" aria-label="Temperatura en grados Celsius">
+      </div>
+      <div class="chart"><svg id="plot" viewBox="0 0 720 440" role="img" aria-label="Diagrama de fases interactivo"></svg></div>
+      <div class="row" id="viewRow"></div>
+      <div class="row" id="presets"><span class="lbl">Ejemplos de clase:</span></div>
+    </div>
+
+    <div class="panel" aria-live="polite">
+      <div>
+        <div class="kind" id="kind"></div>
+        <div class="region" id="region"></div>
+      </div>
+      <h2>1 · Fases presentes · 2 · Composición · 3 · Porcentaje</h2>
+      <div class="ph" id="phases"></div>
+      <div class="bar" id="bar"></div>
+      <h2>Cálculo</h2>
+      <div class="calc" id="calc"></div>
+      <h2 id="microH">Microestructura</h2>
+      <div id="micro"></div>
+      <p class="note" id="note"></p>
+    </div>
+  </div>
+  <p class="note">Diagramas simplificados a partir de los de clase (AULA_4). Las líneas están aproximadas por tramos rectos entre los puntos clave. En Fe‑C se omite la zona δ de alta temperatura. Los valores clave (0,022 / 0,76 / 2,14 / 4,3 / 6,7 % C; 727, 912 y 1147 °C) son exactos; los intermedios son aproximados.</p>
+</div>
+
+<script>
+(function(){
+const fmt=(v,d=2)=>v.toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d});
+const pct=w=>fmt(w*100,1)+' %';
+const lerp=(x,x0,y0,x1,y1)=>y0+(y1-y0)*(x-x0)/(x1-x0);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+// interpolación sobre una tabla [[x,y],...] ordenada por x
+function tab(pts,x){ if(x<=pts[0][0])return pts[0][1]; for(let i=1;i<pts.length;i++){ if(x<=pts[i][0]) return lerp(x,pts[i-1][0],pts[i-1][1],pts[i][0],pts[i][1]); } return pts[pts.length-1][1]; }
+const COL={L:'var(--L)',α:'var(--a)',γ:'var(--g)',β:'var(--c)','Fe₃C':'var(--c)'};
+const NAME={L:'Líquido (L)',α:'α',γ:'γ austenita',β:'β','Fe₃C':'Fe₃C cementita'};
+
+function lever(C,p1,c1,p2,c2){
+  const fmt=(v)=>v.toLocaleString('es-ES',{minimumFractionDigits:v>0&&v<0.1?3:2,maximumFractionDigits:v>0&&v<0.1?3:2});
+  const w1=(c2-C)/(c2-c1), w2=(C-c1)/(c2-c1);
+  return {phases:[{n:p1,c:c1,w:w1},{n:p2,c:c2,w:w2}],tie:[c1,c2],
+    calc:`Isoterma: C(${p1}) = ${fmt(c1)} · C₀ = ${fmt(C)} · C(${p2}) = ${fmt(c2)}\n`+
+         `W(${p1}) = (${fmt(c2)} − ${fmt(C)})/(${fmt(c2)} − ${fmt(c1)}) = ${w1.toFixed(3).replace('.',',')}  → ${pct(w1)}\n`+
+         `W(${p2}) = (${fmt(C)} − ${fmt(c1)})/(${fmt(c2)} − ${fmt(c1)}) = ${w2.toFixed(3).replace('.',',')}  → ${pct(w2)}`};
+}
+function single(C,p,unit){ return {phases:[{n:p,c:C,w:1}],tie:null,calc:`Una sola fase → su composición es la de la aleación (${fmt(C)} ${unit}) y es el 100 %.\nNo hace falta la regla de la palanca.`}; }
+
+/* ---------------- Fe‑C ---------------- */
+const FE={
+  id:'fec', unit:'% C', clabel:'% C', cMin:0,cMax:6.7,cStep:0.01, tMin:0,tMax:1600,tStep:1,
+  views:[{id:'full',name:'Diagrama completo (0–6,7 % C)',x:[0,6.7]},{id:'steel',name:'Zona de aceros (0–2,2 % C)',x:[0,2.2]}],
+  yTicks:[0,200,400,600,800,1000,1200,1400,1600],
+  xTicks:{full:[0,1,2,3,4,5,6,6.7],steel:[0,0.4,0.76,1.2,1.6,2.14]},
+  lines:[
+    {pts:[[0,1538],[4.3,1147],[6.7,1227]],col:'var(--L)',w:2},
+    {pts:[[0,1538],[2.14,1147]],col:'currentColor',w:1.5},
+    {pts:[[2.14,1147],[6.7,1147]],col:'currentColor',w:2},
+    {pts:[[0,912],[0.76,727]],col:'currentColor',w:1.5},
+    {pts:[[0,912],[0.022,727],[0,0]],col:'currentColor',w:1},
+    {pts:[[2.14,1147],[0.76,727]],col:'currentColor',w:1.5},
+    {pts:[[0.022,727],[6.7,727]],col:'currentColor',w:2},
+    {pts:[[2.14,0],[2.14,1147]],col:'currentColor',w:1,dash:'5 4',op:.4}
+  ],
+  marks:[{c:4.3,t:1147,txt:'Eutéctico 4,3 % · 1147 °C'},{c:0.76,t:727,txt:'Eutectoide 0,76 % · 727 °C'}],
+  labels:[
+    {c:3.4,t:1460,s:'Líquido',col:'var(--L)',v:'full'},{c:1.9,t:1290,s:'L + γ',v:'full'},{c:5.6,t:1168,s:'L + Fe₃C',v:'full'},
+    {c:0.75,t:1020,s:'γ',col:'var(--g)',v:'full'},{c:3.7,t:930,s:'γ + Fe₃C',v:'full'},{c:3.7,t:350,s:'α + Fe₃C',v:'full'},
+    {c:1.0,t:60,s:'ACEROS',v:'full',small:1},{c:4.4,t:60,s:'FUNDICIONES',v:'full',small:1},
+    {c:1.55,t:1500,s:'Líquido',col:'var(--L)',v:'steel'},{c:1.85,t:1290,s:'L + γ',v:'steel'},{c:0.55,t:1060,s:'γ austenita',col:'var(--g)',v:'steel'},
+    {c:0.24,t:790,s:'α + γ',v:'steel'},{c:1.75,t:880,s:'γ + Fe₃C',v:'steel'},{c:1.1,t:350,s:'α + Fe₃C',v:'steel'}
+  ],
+  presets:[{n:'0,76 % · 1000 °C',c:0.76,t:1000},{n:'0,76 % · 726 °C',c:0.76,t:726},{n:'1,6 % · 20 °C (50 kg/800 g)',c:1.6,t:20},{n:'0,4 % · 800 °C',c:0.4,t:800},{n:'3 % · 1200 °C',c:3,t:1200}],
+  solve(C,T){
+    let r, region;
+    const liq = C<=4.3 ? 1538-391*C/4.3 : 1147+80*(C-4.3)/2.4;
+    if(C>=6.695){ r=single(6.7,'Fe₃C','% C'); region='Fe₃C (cementita)'; }
+    else if(T>=liq){ r=single(C,'L','% C'); region='Líquido'; }
+    else if(T>=1147){
+      if(C<=4.3){
+        const tsol = C<=2.14 ? 1538-391*C/2.14 : 1147;
+        if(C<=2.14 && T<=tsol){ r=single(C,'γ','% C'); region='γ austenita'; }
+        else { r=lever(C,'γ',(1538-T)*2.14/391,'L',(1538-T)*4.3/391); region='L + γ'; }
+      } else { r=lever(C,'L',4.3+(T-1147)*2.4/80,'Fe₃C',6.7); region='L + Fe₃C'; }
+    } else if(T>=727){
+      const gmin = T<912 ? (912-T)*0.76/185 : 0;
+      const gmax = 0.76+(T-727)*1.38/420;
+      const amax = T<912 ? 0.022*(912-T)/185 : 0;
+      if(T<912 && C<=amax){ r=single(C,'α','% C'); region='α ferrita'; }
+      else if(C<gmin){ r=lever(C,'α',amax,'γ',gmin); region='α + γ'; }
+      else if(C<=gmax){ r=single(C,'γ','% C'); region='γ austenita'; }
+      else { r=lever(C,'γ',gmax,'Fe₃C',6.7); region='γ + Fe₃C'; }
+    } else {
+      const amax=0.022*T/727;
+      if(C<=amax){ r=single(C,'α','% C'); region='α ferrita'; }
+      else { r=lever(C,'α',amax,'Fe₃C',6.7); region='α + Fe₃C'; }
+    }
+    // tipo de aleación
+    let kind;
+    if(C<=0.022) kind='Hierro casi puro (≤ 0,022 % C)';
+    else if(Math.abs(C-0.76)<0.006) kind='Acero eutectoide (0,76 % C)';
+    else if(C<0.76) kind='Acero hipoeutectoide (< 0,76 % C)';
+    else if(C<=2.14) kind='Acero hipereutectoide (0,76–2,14 % C)';
+    else if(Math.abs(C-4.3)<0.006) kind='Fundición eutéctica (4,3 % C)';
+    else kind = C<4.3 ? 'Fundición hipoeutéctica (2,14–4,3 % C)' : 'Fundición hipereutéctica (> 4,3 % C)';
+    // microestructura (enfriamiento lento)
+    let micro=null, steps=[];
+    if(C<=2.14 && C>0.022){
+      if(T<727){
+        if(Math.abs(C-0.76)<0.006) micro={items:[{n:'Perlita (α + Fe₃C en láminas)',w:1,col:'currentColor'}],calc:'C₀ = 0,76 % → todo el grano pasa a perlita al cruzar 727 °C.'};
+        else if(C<0.76){ const wp=(C-0.022)/(0.76-0.022); micro={items:[{n:'α proeutectoide',w:1-wp,col:'var(--a)'},{n:'Perlita',w:wp,col:'currentColor'}],calc:`Palanca entre α (0,022) y el eutectoide (0,76):\nW perlita = (${fmt(C)} − 0,022)/(0,76 − 0,022) = ${fmt(wp,3)}\nW α proeut. = (0,76 − ${fmt(C)})/(0,76 − 0,022) = ${fmt(1-wp,3)}`}; }
+        else { const wp=(6.7-C)/(6.7-0.76); micro={items:[{n:'Perlita',w:wp,col:'currentColor'},{n:'Fe₃C proeutectoide',w:1-wp,col:'var(--c)'}],calc:`Palanca entre el eutectoide (0,76) y Fe₃C (6,7):\nW perlita = (6,7 − ${fmt(C)})/(6,7 − 0,76) = ${fmt(wp,3)}\nW Fe₃C proeut. = (${fmt(C)} − 0,76)/(6,7 − 0,76) = ${fmt(1-wp,3)}`}; }
+      } else if(region==='α + γ') micro={text:'Granos de γ con α proeutectoide creciendo en los bordes de grano. Al llegar a 727 °C, la γ que queda se convertirá en perlita.'};
+      else if(region==='γ + Fe₃C') micro={text:'Granos de γ con Fe₃C proeutectoide en los bordes de grano. Al llegar a 727 °C, la γ que queda se convertirá en perlita.'};
+      else if(region==='γ austenita') micro={text:'Solo granos de austenita γ (FCC). Todavía no ha cruzado ninguna línea de transformación.'};
+      else if(region==='L + γ') micro={text:'Solidificando: granos de γ que crecen dentro del líquido.'};
+      else micro={text:'Aleación fundida.'};
+      steps = C<0.76-0.006 ? ['L → L + γ → γ','Cruza A₃: aparece α proeutectoide en los bordes de grano (α + γ)','A 727 °C: la γ restante → perlita','Resultado: α proeutectoide + perlita']
+            : Math.abs(C-0.76)<0.006 ? ['L → L + γ → γ','No cruza A₃ ni A_cm: sigue siendo γ hasta 727 °C','A 727 °C: toda la γ → perlita','Resultado: 100 % perlita']
+            : ['L → L + γ → γ','Cruza A_cm: aparece Fe₃C proeutectoide en los bordes de grano','A 727 °C: la γ restante → perlita','Resultado: Fe₃C proeutectoide + perlita'];
+    } else if(C>2.14){ micro={text:'Fundición: al solidificar aparece la ledeburita (eutéctico γ + Fe₃C a 1147 °C). Por debajo de 727 °C, su γ pasa a perlita. Las fundiciones no se calculan con detalle en el temario.'}; }
+    else micro={text:'Prácticamente ferrita α pura.'};
+    return Object.assign(r,{region,kind,micro,steps,note: T>1394&&C<0.5 ? 'A esta temperatura y tan poco carbono existiría ferrita δ; el diagrama simplificado no la incluye.' : ''});
+  }
+};
+
+/* ---------------- Cu‑Ni ---------------- */
+const LIQ=[[0,1085],[24,1220],[32,1250],[60,1350],[100,1455]], SOL=[[0,1085],[38,1220],[43,1250],[70,1350],[100,1455]];
+const inv=(pts,T)=>tab(pts.map(p=>[p[1],p[0]]),T);
+const CUNI={
+  id:'cuni', unit:'% Ni', clabel:'% Ni', cMin:0,cMax:100,cStep:0.5, tMin:1000,tMax:1500,tStep:1,
+  views:[{id:'full',name:'',x:[0,100]}], yTicks:[1000,1100,1200,1300,1400,1500], xTicks:{full:[0,20,40,60,80,100]},
+  lines:[{pts:LIQ,col:'var(--L)',w:2},{pts:SOL,col:'var(--a)',w:2}],
+  marks:[],
+  labels:[{c:28,t:1420,s:'Líquido',col:'var(--L)',v:'full'},{c:72,t:1120,s:'Sólido α (Cu‑Ni)',col:'var(--a)',v:'full'},{c:52,t:1312,s:'L + α',v:'full'},
+    {c:4,t:1060,s:'Cu puro · 1085 °C',v:'full',small:1,anchor:'start'},{c:97,t:1475,s:'Ni puro · 1455 °C',v:'full',small:1,anchor:'end'}],
+  presets:[{n:'35 % Ni · 1250 °C',c:35,t:1250},{n:'30 % Ni · 1220 °C',c:30,t:1220}],
+  solve(C,T){
+    let r,region;
+    if(T>=tab(LIQ,C)){ r=single(C,'L','% Ni'); region='Líquido'; }
+    else if(T<=tab(SOL,C)){ r=single(C,'α','% Ni'); region='Sólido α'; }
+    else { r=lever(C,'L',inv(LIQ,T),'α',inv(SOL,T)); region='L + α'; }
+    return Object.assign(r,{region,kind:'Aleación Cu‑Ni con '+fmt(C,1)+' % Ni',micro:{text: region==='L + α'?'Solidificando: granos de α que crecen dentro del líquido.':region==='Líquido'?'Aleación fundida.':'Granos de una única solución sólida sustitucional α (Cu y Ni mezclados en la misma red FCC).'},steps:[],note:''});
+  }
+};
+
+/* ---------------- Pb‑Sn ---------------- */
+const AMAX=[[0,2],[150,11],[183,18.3]], BMIN=[[0,99],[150,98],[183,97.8]];
+const PBSN={
+  id:'pbsn', unit:'% Sn', clabel:'% Sn', cMin:0,cMax:100,cStep:0.5, tMin:0,tMax:350,tStep:1,
+  views:[{id:'full',name:'',x:[0,100]}], yTicks:[0,50,100,150,200,250,300,350], xTicks:{full:[0,18.3,40,61.9,80,97.8]},
+  lines:[
+    {pts:[[0,327],[61.9,183],[100,232]],col:'var(--L)',w:2},
+    {pts:[[0,327],[18.3,183],[11,150],[2,0]],col:'var(--a)',w:2},
+    {pts:[[100,232],[97.8,183],[98,150],[99,0]],col:'var(--c)',w:2},
+    {pts:[[18.3,183],[97.8,183]],col:'currentColor',w:2}
+  ],
+  marks:[{c:61.9,t:183,txt:'Eutéctico 61,9 % · 183 °C'}],
+  labels:[{c:45,t:290,s:'Líquido',col:'var(--L)',v:'full'},{c:22,t:235,s:'α + L',v:'full'},{c:84,t:200,s:'L + β',v:'full'},
+    {c:4.5,t:140,s:'α',col:'var(--a)',v:'full'},{c:55,t:90,s:'α + β',v:'full'},{c:97,t:60,s:'β',col:'var(--c)',v:'full',anchor:'end'}],
+  presets:[{n:'40 % Sn · 150 °C',c:40,t:150},{n:'10 % Sn · 200 °C',c:10,t:200},{n:'61,9 % Sn · 150 °C',c:61.9,t:150}],
+  solve(C,T){
+    let r,region;
+    if(T>=183){
+      const liq = C<=61.9 ? 327-144*C/61.9 : 183+49*(C-61.9)/38.1;
+      const as = (327-T)*18.3/144, bs = 100-(232-T)*2.2/49;
+      if(T>=liq){ r=single(C,'L','% Sn'); region='Líquido'; }
+      else if(C<=as){ r=single(C,'α','% Sn'); region='α'; }
+      else if(T<=232 && C>=bs){ r=single(C,'β','% Sn'); region='β'; }
+      else if(C<61.9){ r=lever(C,'α',as,'L',(327-T)*61.9/144); region='α + L'; }
+      else { r=lever(C,'L',61.9+(T-183)*38.1/49,'β',bs); region='L + β'; }
+    } else {
+      const a=tab(AMAX,T), b=tab(BMIN,T);
+      if(C<=a){ r=single(C,'α','% Sn'); region='α'; }
+      else if(C>=b){ r=single(C,'β','% Sn'); region='β'; }
+      else { r=lever(C,'α',a,'β',b); region='α + β'; }
+    }
+    let kind = C<=18.3?'Aleación de α (≤ 18,3 % Sn)':Math.abs(C-61.9)<0.3?'Aleación eutéctica (61,9 % Sn)':C<61.9?'Aleación hipoeutéctica (18,3–61,9 % Sn)':C<97.8?'Aleación hipereutéctica (61,9–97,8 % Sn)':'Aleación de β (≥ 97,8 % Sn)';
+    let micro;
+    if(T<183 && C>18.3 && C<97.8){
+      if(Math.abs(C-61.9)<0.3) micro={items:[{n:'Eutéctico (láminas α + β)',w:1,col:'currentColor'}],calc:'C₀ = 61,9 % → todo el líquido solidifica de golpe a 183 °C como eutéctico.'};
+      else if(C<61.9){ const we=(C-18.3)/(61.9-18.3); micro={items:[{n:'α primario',w:1-we,col:'var(--a)'},{n:'Eutéctico (α + β)',w:we,col:'currentColor'}],calc:`Justo por debajo de 183 °C (palanca entre 18,3 y 61,9):\nW eutéctico = (${fmt(C)} − 18,3)/(61,9 − 18,3) = ${fmt(we,3)}`}; }
+      else { const we=(97.8-C)/(97.8-61.9); micro={items:[{n:'Eutéctico (α + β)',w:we,col:'currentColor'},{n:'β primario',w:1-we,col:'var(--c)'}],calc:`Justo por debajo de 183 °C (palanca entre 61,9 y 97,8):\nW eutéctico = (97,8 − ${fmt(C)})/(97,8 − 61,9) = ${fmt(we,3)}`}; }
+    } else micro={text: region==='Líquido'?'Aleación fundida.':region.includes('L')?'Solidificando: cristales primarios dentro del líquido.':'Granos de una sola fase sólida.'};
+    return Object.assign(r,{region,kind,micro,steps:[],note:''});
+  }
+};
+
+const SYS={fec:FE,cuni:CUNI,pbsn:PBSN};
+let sys=FE, view='full', C=0.4, T=800;
+const state={fec:{c:0.4,t:800,view:'full'},cuni:{c:35,t:1250,view:'full'},pbsn:{c:40,t:150,view:'full'}};
+
+const svg=document.getElementById('plot'), NS='http://www.w3.org/2000/svg';
+const X0=70,X1=700,Y0=20,Y1=388;
+const xr=()=>sys.views.find(v=>v.id===view).x;
+const px=c=>{const [a,b]=xr();return X0+(c-a)/(b-a)*(X1-X0)};
+const py=t=>Y1-(t-sys.tMin)/(sys.tMax-sys.tMin)*(Y1-Y0);
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);(parent||svg).appendChild(e);return e;}
+function txt(x,y,s,attrs,parent){const e=el('text',Object.assign({x,y},attrs),parent);e.textContent=s;return e;}
+
+function drawStatic(){
+  svg.innerHTML='';
+  const defs=el('defs',{}); const cp=el('clipPath',{id:'clip'},defs); el('rect',{x:X0,y:Y0,width:X1-X0,height:Y1-Y0},cp);
+  const g=el('g',{'font-family':'IBM Plex Mono, monospace','font-size':'11',fill:'var(--muted)'});
+  for(const t of sys.yTicks){ el('line',{x1:X0,x2:X1,y1:py(t),y2:py(t),stroke:'var(--grid)'},g); txt(X0-6,py(t)+4,String(t),{'text-anchor':'end'},g); }
+  for(const c of sys.xTicks[view]){ el('line',{x1:px(c),x2:px(c),y1:Y0,y2:Y1,stroke:'var(--grid)'},g); txt(px(c),Y1+16,fmt(c,c%1?(String(c).split('.')[1].length):0),{'text-anchor':'middle'},g); }
+  txt((X0+X1)/2,Y1+36,sys.clabel+' en peso',{'text-anchor':'middle',fill:'currentColor'},g);
+  txt(16,(Y0+Y1)/2,'T (°C)',{'text-anchor':'middle',fill:'currentColor',transform:`rotate(-90 16 ${(Y0+Y1)/2})`},g);
+  const lg=el('g',{'clip-path':'url(#clip)'});
+  for(const l of sys.lines){ el('polyline',{points:l.pts.map(p=>px(p[0])+','+py(p[1])).join(' '),fill:'none',stroke:l.col,'stroke-width':l.w,'stroke-dasharray':l.dash||'',opacity:l.op||1},lg); }
+  const lab=el('g',{'font-family':'IBM Plex Sans, sans-serif','font-size':'13',fill:'currentColor','clip-path':'url(#clip)'});
+  for(const l of sys.labels){ if(l.v!==view)continue; txt(px(l.c),py(l.t),l.s,{'text-anchor':l.anchor||'middle',fill:l.col||'currentColor','font-weight':l.col?'600':'400','font-size':l.small?'11':'13',opacity:l.small?.7:1},lab); }
+  for(const m of sys.marks){ const [a,b]=xr(); if(m.c<a||m.c>b)continue; el('circle',{cx:px(m.c),cy:py(m.t),r:4,fill:'currentColor'},lab); txt(px(m.c)+7,py(m.t)-7,m.txt,{'font-size':'11','font-family':'IBM Plex Mono, monospace',fill:'var(--muted)'},lab); }
+  el('rect',{x:X0,y:Y0,width:X1-X0,height:Y1-Y0,fill:'none',stroke:'currentColor'});
+  dyn=el('g',{'clip-path':'url(#clip)'}); dynOut=el('g',{});
+}
+let dyn,dynOut;
+
+function update(fromInput){
+  const [a,b]=xr();
+  if(sys.views.length>1 && (C>b)){ view='full'; drawStatic(); renderViews(); }
+  const r=sys.solve(C,T);
+  // dinámico
+  dyn.innerHTML=''; dynOut.innerHTML='';
+  const x=px(C), y=py(T);
+  el('line',{x1:x,x2:x,y1:y,y2:Y1,stroke:'currentColor','stroke-dasharray':'2 3',opacity:.5},dyn);
+  el('line',{x1:X0,x2:x,y1:y,y2:y,stroke:'currentColor','stroke-dasharray':'2 3',opacity:.35},dyn);
+  if(r.tie){
+    const [c1,c2]=r.tie, p=r.phases;
+    el('line',{x1:px(c1),x2:px(c2),y1:y,y2:y,stroke:'currentColor','stroke-width':3},dyn);
+    [[c1,p[0].n],[c2,p[1].n]].forEach(([c,n])=>{
+      el('line',{x1:px(c),x2:px(c),y1:y,y2:Y1,stroke:COL[n],'stroke-dasharray':'4 3','stroke-width':1.5},dyn);
+      el('circle',{cx:px(c),cy:y,r:4.5,fill:COL[n]},dyn);
+      txt(px(c),Y1-6,fmt(c),{'text-anchor':'middle','font-family':'IBM Plex Mono, monospace','font-size':'11',fill:COL[n],'paint-order':'stroke',stroke:'var(--surface)','stroke-width':3},dyn);
+    });
+  }
+  el('circle',{cx:x,cy:y,r:9,fill:'var(--surface)',stroke:'currentColor','stroke-width':2.5},dyn);
+  el('circle',{cx:x,cy:y,r:3,fill:'currentColor'},dyn);
+  const tx = x>X1-170 ? x-14 : x+14;
+  txt(tx,y-12,`${fmt(C)} ${sys.unit} · ${fmt(T,0)} °C`,{'text-anchor':x>X1-170?'end':'start','font-family':'IBM Plex Mono, monospace','font-size':'12','font-weight':'500',fill:'currentColor','paint-order':'stroke',stroke:'var(--surface)','stroke-width':4},dyn);
+  // panel
+  document.getElementById('kind').textContent=r.kind;
+  document.getElementById('region').textContent='Región: '+r.region;
+  const ph=document.getElementById('phases');
+  ph.innerHTML='<span></span><span class="h">Fase</span><span class="h" style="text-align:right">Composición</span><span class="h" style="text-align:right">%</span>';
+  for(const p of r.phases){
+    ph.insertAdjacentHTML('beforeend',`<span class="sw" style="background:${COL[p.n]}"></span><span>${NAME[p.n]}</span><span class="num">${fmt(p.c,p.c<0.1&&p.c>0?3:2)} ${sys.unit}</span><span class="num"><strong>${pct(p.w)}</strong></span>`);
+  }
+  document.getElementById('bar').innerHTML=r.phases.map(p=>`<div style="width:${p.w*100}%;background:${COL[p.n]}" title="${NAME[p.n]}">${p.w>0.12?p.n+' '+pct(p.w):''}</div>`).join('');
+  document.getElementById('calc').textContent=r.calc;
+  const m=document.getElementById('micro'); let h='';
+  if(r.micro){
+    if(r.micro.items){
+      h+='<div class="bar" style="margin-bottom:8px">'+r.micro.items.map(i=>`<div style="width:${i.w*100}%;background:${i.col==='currentColor'?'var(--muted)':i.col}">${i.w>0.15?pct(i.w):''}</div>`).join('')+'</div>';
+      h+='<div class="ph" style="grid-template-columns:auto 1fr auto">'+r.micro.items.map(i=>`<span class="sw" style="background:${i.col==='currentColor'?'var(--muted)':i.col}"></span><span>${i.n}</span><span class="num"><strong>${pct(i.w)}</strong></span>`).join('')+'</div>';
+      h+=`<div class="calc" style="margin-top:8px">${r.micro.calc}</div>`;
+    } else h+=`<p style="margin:0;font-size:14px">${r.micro.text}</p>`;
+  }
+  if(r.steps && r.steps.length){ h+='<p class="note" style="margin:10px 0 4px">Enfriamiento lento de esta aleación:</p><ol class="steps">'+r.steps.map(s=>`<li>${s}</li>`).join('')+'</ol>'; }
+  m.innerHTML=h;
+  document.getElementById('note').textContent=r.note||'';
+  if(!fromInput){ cR.value=C; cN.value=+C.toFixed(3); tR.value=T; tN.value=Math.round(T); }
+  state[sys.id]={c:C,t:T,view};
+}
+
+const cR=document.getElementById('cR'),cN=document.getElementById('cN'),tR=document.getElementById('tR'),tN=document.getElementById('tN');
+function setup(){
+  document.getElementById('cLab').textContent=sys.clabel;
+  for(const e of [cR,cN]){ e.min=sys.cMin; e.max=sys.cMax; e.step=sys.cStep; }
+  for(const e of [tR,tN]){ e.min=sys.tMin; e.max=sys.tMax; e.step=sys.tStep; }
+  const pr=document.getElementById('presets'); pr.innerHTML='<span class="lbl">Ejemplos de clase:</span>';
+  for(const p of sys.presets){ const b=document.createElement('button'); b.type='button'; b.className='chip'; b.textContent=p.n; b.onclick=()=>{C=p.c;T=p.t; if(sys.views.length>1){view=p.c<=2.2?'steel':'full'; drawStatic(); renderViews();} update();}; pr.appendChild(b); }
+  renderViews(); drawStatic(); update();
+}
+function renderViews(){
+  const vr=document.getElementById('viewRow'); vr.innerHTML='';
+  if(sys.views.length<2){ vr.hidden=true; return; } vr.hidden=false;
+  vr.insertAdjacentHTML('beforeend','<span class="lbl">Vista:</span>');
+  for(const v of sys.views){ const b=document.createElement('button'); b.type='button'; b.className='chip'; b.textContent=v.name; b.setAttribute('aria-pressed',v.id===view); if(v.id===view){b.style.background='var(--fg)';b.style.color='var(--bg)';}
+    b.onclick=()=>{ view=v.id; if(C>v.x[1]) C=v.x[1]; drawStatic(); renderViews(); update(); }; vr.appendChild(b); }
+}
+cR.addEventListener('input',()=>{C=+cR.value;cN.value=C;update(true)});
+tR.addEventListener('input',()=>{T=+tR.value;tN.value=T;update(true)});
+cN.addEventListener('input',()=>{const v=parseFloat(cN.value); if(isNaN(v))return; C=clamp(v,sys.cMin,sys.cMax); cR.value=C; update(true)});
+tN.addEventListener('input',()=>{const v=parseFloat(tN.value); if(isNaN(v))return; T=clamp(v,sys.tMin,sys.tMax); tR.value=T; update(true)});
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.tabs button').forEach(o=>o.setAttribute('aria-pressed',o===b));
+  sys=SYS[b.dataset.sys]; const s=state[sys.id]; C=s.c; T=s.t; view=s.view; setup();
+}));
+// arrastrar sobre el diagrama
+let drag=false;
+function fromEvent(e){ const pt=svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY; const p=pt.matrixTransform(svg.getScreenCTM().inverse());
+  const [a,b]=xr(); let c=a+(clamp(p.x,X0,X1)-X0)/(X1-X0)*(b-a); let t=sys.tMin+(Y1-clamp(p.y,Y0,Y1))/(Y1-Y0)*(sys.tMax-sys.tMin);
+  const dec = (b-a)<5 ? 100 : (b-a)<10 ? 100 : 2; C=Math.round(c*dec)/dec; T=Math.round(t); update(); }
+svg.addEventListener('pointerdown',e=>{drag=true; try{svg.setPointerCapture(e.pointerId)}catch(_){} fromEvent(e)});
+svg.addEventListener('pointermove',e=>{ if(drag) fromEvent(e) });
+svg.addEventListener('pointerup',()=>drag=false); svg.addEventListener('pointercancel',()=>drag=false);
+setup();
+})();
+</script>
+
+</body>
+</html>
