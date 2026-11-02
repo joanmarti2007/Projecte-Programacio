@@ -1,0 +1,36 @@
+2026_0_803_17030_4_9
+Pràctica (Challenges)
+Entrega Challenge 1 (Variables)
+Entrega Challenge 1 (Variables)
+Requisitos de finalización
+ Hecho
+Apertura: miércoles, 18 de septiembre de 2024, 08:00
+Cierre: lunes, 28 de septiembre de 2026, 13:00
+
+Pujeu en aquesta Tasca una carpeta comprimida (.zip). que contingui els vostres sketches de Processing.
+
+Entrega de l'exercici:
+
+Individual
+El nom de la carpeta ha de seguir la següent estructura: "CognomNom_P1".
+El nom de la autora de l'exercici ha de constar en la primera línea de codi de l'sketch com a comentari.
+
+Estado de la entrega
+Estado de la entrega
+Estado de la entrega	Enviado para calificar
+Estado de la calificación	Calificado
+Tiempo restante	La tarea fue enviada 31 minutos 57 segundos antes de la fecha límite
+Última modificación	lunes, 28 de septiembre de 2026, 12:28
+Archivos enviados	
+	
+ MartiJoan_p1.zip
+28 de septiembre de 2026, 12:27
+
+Comentarios de la entrega	
+Comentarios (0)
+Comentario
+Comentario
+Calificación	10,0 (A)
+Calificado sobre	jueves, 22 de octubre de 2026, 18:02
+Calificado por	Pau Benazet I Montobbio
+

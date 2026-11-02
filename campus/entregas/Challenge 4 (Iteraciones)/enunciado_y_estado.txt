@@ -1,0 +1,30 @@
+2026_0_803_17030_4_9
+Pràctica (Challenges)
+Entrega Challenge 4 (Iteraciones)
+Entrega Challenge 4 (Iteraciones)
+Requisitos de finalización
+ Hecho
+Cierre: lunes, 19 de octubre de 2026, 23:59
+
+Pujeu en aquesta Tasca una carpeta comprimida (.zip). que contingui els vostres sketches de Processing i el PDF de resposta de les preguntes (si s'escau).
+
+Entrega de l'exercici:
+
+Individual
+El nom de la carpeta ha de seguir la següent estructura: "CognomNom_P4".
+El nom de la autora de l'exercici ha de constar en la primera línea de codi de l'sketch com a comentari.
+
+Estado de la entrega
+Estado de la entrega
+Estado de la entrega	Enviado para calificar
+Estado de la calificación	Sin calificar
+Tiempo restante	La tarea fue enviada 11 horas 7 minutos antes de la fecha límite
+Última modificación	lunes, 19 de octubre de 2026, 12:51
+Archivos enviados	
+	
+ MartiJoan_P4.zip
+19 de octubre de 2026, 12:51
+
+Comentarios de la entrega	
+Comentarios (0)
+

@@ -1,0 +1,31 @@
+2026_0_803_17030_4_9
+Pràctica (Challenges)
+Entrega Challenge 2 (Dibujo)
+Entrega Challenge 2 (Dibujo)
+Requisitos de finalización
+Marcar como hecha
+Cierre: lunes, 5 de octubre de 2026, 13:00
+
+Pujeu en aquesta Tasca una carpeta comprimida (.zip). que contingui els vostres sketches de Processing i el PDF de resposta de les preguntes (si s'escau).
+
+Entrega de l'exercici:
+
+Individual
+El nom de la carpeta ha de seguir la següent estructura: "CognomNom_P2".
+El nom de la autora de l'exercici ha de constar en la primera línea de codi de l'sketch com a comentari.
+
+Agregar entrega
+Estado de la entrega
+Estado de la entrega
+Estado de la entrega	Todavía no se han realizado envíos
+Estado de la calificación	Calificado
+Tiempo restante	La Tarea está retrasada por: 28 días 3 horas
+Última modificación	-
+Comentarios de la entrega	
+Comentarios (0)
+Comentario
+Comentario
+Calificación	0,0 (F)
+Calificado sobre	jueves, 22 de octubre de 2026, 18:16
+Calificado por	Pau Benazet I Montobbio
+

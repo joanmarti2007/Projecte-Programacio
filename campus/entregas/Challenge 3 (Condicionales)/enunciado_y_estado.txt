@@ -1,0 +1,30 @@
+2026_0_803_17030_4_9
+Pràctica (Challenges)
+Entrega Challenge 3 (Condicionales)
+Entrega Challenge 3 (Condicionales)
+Requisitos de finalización
+ Hecho
+Cierre: jueves, 15 de octubre de 2026, 11:00
+
+Pujeu en aquesta Tasca una carpeta comprimida (.zip). que contingui els vostres sketches de Processing i el PDF de resposta de les preguntes (si s'escau).
+
+Entrega de l'exercici:
+
+Individual
+El nom de la carpeta ha de seguir la següent estructura: "CognomNom_P3".
+El nom de la autora de l'exercici ha de constar en la primera línea de codi de l'sketch com a comentari.
+
+Estado de la entrega
+Estado de la entrega
+Estado de la entrega	Enviado para calificar
+Estado de la calificación	Sin calificar
+Tiempo restante	La tarea fue enviada 17 minutos 26 segundos antes de la fecha límite
+Última modificación	jueves, 15 de octubre de 2026, 10:42
+Archivos enviados	
+	
+ MartiJoan_P3.zip
+15 de octubre de 2026, 10:42
+
+Comentarios de la entrega	
+Comentarios (0)
+
