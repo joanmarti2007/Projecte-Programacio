@@ -54,7 +54,11 @@ void draw() {
   }
 
   // Sensor: más claro cuanto mayor es la lectura (blanco al tocarlo)
-  fill(50 + lectura);
+  if (lectura == 1000) {
+    fill(255);              // tocando: blanco
+  } else {
+    fill(50 + lectura);     // de 50 (lejos) a 250 (encima)
+  }
   ellipse(xSensor, ySensor, diamSensor, diamSensor);
 
   // Valor del sensor en la esquina
