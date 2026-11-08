@@ -92,13 +92,13 @@ void dibujarLuz() {
 
   // Círculo gris de base: es lo que se ve cuando está apagada
   fill(90);
-  circle(xLuz, yLuz, diamLuz);
+  ellipse(xLuz, yLuz, diamLuz, diamLuz);
 
   // Encendida: encima, el círculo de colorLuz con transparencia = brillo.
   // brillo 0 -> se ve el gris; brillo 255 -> se ve colorLuz entero.
   if (encendida) {
     fill(colorLuz, brillo);
-    circle(xLuz, yLuz, diamLuz);
+    ellipse(xLuz, yLuz, diamLuz, diamLuz);
   }
 }
 
@@ -110,7 +110,7 @@ void dibujarHalo() {
     float diam = diamLuz + i * (diamLuz * 0.12) * brillo / 255.0;
     float transparencia = brillo * 0.35 / i;
     fill(colorLuz, transparencia);
-    circle(xLuz, yLuz, diam);
+    ellipse(xLuz, yLuz, diam, diam);
   }
 }
 
@@ -186,7 +186,7 @@ void dibujarSensor() {
   noFill();
   stroke(255, 30);
   strokeWeight(1);
-  circle(xSensor, ySensor, distanciaDeteccion * 2);
+  ellipse(xSensor, ySensor, distanciaDeteccion * 2, distanciaDeteccion * 2);
 
   if (lectura >= 1000) {
     fill(80, 255, 140);                          // tocando: verde
@@ -196,7 +196,7 @@ void dibujarSensor() {
   }
   stroke(160);
   strokeWeight(2);
-  circle(xSensor, ySensor, diamSensor);
+  ellipse(xSensor, ySensor, diamSensor, diamSensor);
   noStroke();
 }
 
