@@ -1,0 +1,8 @@
+{
+  "name": "cache-timer",
+  "version": "0.1.0",
+  "description": "Avisa cuando la caché de la conversación está a punto de enfriarse o ya se ha enfriado",
+  "author": { "name": "joanmarti2007" },
+  "license": "MIT",
+  "types": "./types/index.d.ts"
+}
