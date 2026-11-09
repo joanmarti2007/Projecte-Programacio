@@ -1,11 +1,19 @@
 {
   "name": "projecte-programacio",
-  "owner": { "name": "joanmarti2007" },
+  "owner": {
+    "name": "joanmarti2007"
+  },
   "plugins": [
     {
       "name": "cache-timer",
       "source": "./mods/cache-timer",
       "description": "Avisa cuando la caché de la conversación está a punto de enfriarse o ya se ha enfriado"
+    },
+    {
+      "name": "model-router",
+      "source": "./mods/model-router",
+      "description": "Reparte cada mensaje entre Haiku y Opus según la dificultad de la tarea"
     }
-  ]
+  ],
+  "description": "Mods de Claude Code de joanmarti2007"
 }

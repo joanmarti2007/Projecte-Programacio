@@ -1,0 +1,8 @@
+{
+  "name": "model-router",
+  "version": "0.1.0",
+  "description": "Reparte cada mensaje entre Haiku y Opus según la dificultad de la tarea",
+  "author": { "name": "joanmarti2007" },
+  "license": "MIT",
+  "types": "./types/index.d.ts"
+}
