@@ -6,22 +6,24 @@ float xLuz, yLuz, diamLuz;  // posición y tamaño de la luz
 
 // ===== Sensor =====
 float xSensor, ySensor, diamSensor;  // posición y tamaño del sensor
-float lectura;              // valor del sensor con ruido (lo que daría el real)
-float media;                // media de las últimas lecturas (valor filtrado)
+float lectura;              // valor del sensor con ruido
+float media;                // valor filtrado (media de las últimas lecturas)
 
-// ===== Parte 4: tocar =====
-float umbral = 700;          // por encima de este valor se considera que se toca
-boolean tocando = false;     // true mientras se toca el sensor
+// ===== Tocar =====
+float umbral = 700;           // por encima de este valor se considera que se toca
+boolean tocando = false;      // true mientras se toca el sensor
 boolean tocandoAntes = false; // si se tocaba en el frame anterior (debounce)
 
-// ===== Parte 5: filtro de media móvil =====
+// ===== Filtro de media móvil =====
 float[] ultimas = new float[10];   // las 10 últimas lecturas
 int posicion = 0;                  // dónde se guarda la siguiente lectura
+
 
 void setup() {
   size(900, 600);
   noStroke();
 
+  // Todo en función de width y height (responsive)
   xLuz = width / 2;
   yLuz = height * 0.3;
   diamLuz = height * 0.3;
@@ -34,59 +36,37 @@ void setup() {
   textSize(height * 0.04);
 }
 
+// draw() se lee como una lista de pasos: primero decide, después dibuja
 void draw() {
-  // 1. Leer el sensor una sola vez por frame, con el ruido de un sensor real
-  lectura = anadirRuido(leerSensor());
+  // --- Decidir (el "cerebro": lo que se llevará a Arduino) ---
+  lectura = anadirRuido(leerSensor());   // leer una vez por frame
+  media = calcularMedia(lectura);        // filtrar el ruido
+  tocando = estaTocando(media);          // ¿se toca?
 
-  // 2. Filtrar: usamos la media de las 10 últimas lecturas, no la lectura suelta
-  media = calcularMedia(lectura);
-
-  // 3. ¿Se está tocando? Solo si la media supera el umbral
-  tocando = media > umbral;
-
-  // 4. Modo interruptor con debounce: solo cuenta el momento en que EMPIEZA
-  //    el toque (ahora se toca y en el frame anterior no). Mantener el click
-  //    no vuelve a cambiar la lámpara, y soltarlo tampoco.
-  if (tocando && !tocandoAntes) {
-    encendida = !encendida;
+  if (empiezaToque(tocando, tocandoAntes)) {
+    cambiarEstado();                     // un toque = un cambio
   }
   tocandoAntes = tocando;
 
-  // 5. Dibujar
+  // --- Dibujar (solo pantalla: en Arduino será el LED) ---
   background(20);
-
-  if (encendida) {                       // halo
-    for (int i = 8; i > 0; i--) {
-      fill(colorLuz, brillo / (i * 3));
-      float d = diamLuz * (1 + i * brillo / 2000.0);
-      ellipse(xLuz, yLuz, d, d);
-    }
-  }
-
-  fill(90);                              // luz
-  ellipse(xLuz, yLuz, diamLuz, diamLuz);
-  if (encendida) {
-    fill(colorLuz, brillo);
-    ellipse(xLuz, yLuz, diamLuz, diamLuz);
-  }
-
-  if (tocando) {                         // sensor: blanco al tocar
-    fill(255);
-  } else {
-    fill(60 + media / 4);                // más claro cuanto más cerca
-  }
-  ellipse(xSensor, ySensor, diamSensor, diamSensor);
-
-  fill(255);                             // valores para depurar
-  text("Lectura: " + int(lectura), width * 0.03, height * 0.07);
-  text("Media: " + int(media), width * 0.03, height * 0.13);
+  dibujarHalo();
+  dibujarLuz();
+  dibujarSensor();
+  dibujarValores();
 }
 
-// Devuelve 0 lejos, de 0 a 200 al acercarse, 200 encima y 1000 con click encima
+
+// =====================================================================
+// FUNCIONES QUE DECIDEN
+// =====================================================================
+
+// Simula el sensor con el ratón:
+// 0 lejos, de 0 a 200 al acercarse, 200 encima y 1000 con click encima
 float leerSensor() {
   float d = dist(mouseX, mouseY, xSensor, ySensor);
   float radio = diamSensor / 2;
-  float alcance = diamSensor * 2;
+  float alcance = diamSensor * 2;        // empieza a notar a 2 diámetros
 
   if (d <= radio && mousePressed) {
     return 1000;
@@ -99,17 +79,97 @@ float leerSensor() {
   }
 }
 
-// Guarda la lectura nueva en el array (sustituyendo la más antigua)
+// Guarda la lectura en el array (sustituye la más antigua)
 // y devuelve la media de las 10 últimas
 float calcularMedia(float nueva) {
   ultimas[posicion] = nueva;
-  posicion = (posicion + 1) % ultimas.length;   // 0, 1, ... 9, 0, 1...
+  posicion = (posicion + 1) % ultimas.length;
 
   float suma = 0;
   for (int i = 0; i < ultimas.length; i++) {
     suma = suma + ultimas[i];
   }
   return suma / ultimas.length;
+}
+
+// true si el valor filtrado supera el umbral
+boolean estaTocando(float valor) {
+  return valor > umbral;
+}
+
+// true solo en el frame en que empieza el toque (antes no, ahora sí): debounce
+boolean empiezaToque(boolean ahora, boolean antes) {
+  return ahora && !antes;
+}
+
+
+// =====================================================================
+// ACCIONES DE LA LÁMPARA (una función por acción)
+// =====================================================================
+
+void encender() {
+  encendida = true;
+}
+
+void apagar() {
+  encendida = false;
+}
+
+// Si estaba encendida la apaga, y si estaba apagada la enciende
+void cambiarEstado() {
+  if (encendida) {
+    apagar();
+  } else {
+    encender();
+  }
+}
+
+
+// =====================================================================
+// FUNCIONES QUE DIBUJAN
+// =====================================================================
+
+// Círculo a partir del diámetro (se usa en todos los dibujos)
+void circulo(float x, float y, float diametro) {
+  ellipse(x, y, diametro, diametro);
+}
+
+// Halo: solo encendida. Del círculo más grande al más pequeño;
+// cuanto más grande, más transparente. Depende del brillo.
+void dibujarHalo() {
+  if (encendida) {
+    for (int i = 8; i > 0; i--) {
+      fill(colorLuz, brillo / (i * 3));
+      circulo(xLuz, yLuz, diamLuz * (1 + i * brillo / 2000.0));
+    }
+  }
+}
+
+// Luz: círculo gris y, si está encendida, encima el color con transparencia = brillo
+void dibujarLuz() {
+  fill(90);
+  circulo(xLuz, yLuz, diamLuz);
+  if (encendida) {
+    fill(colorLuz, brillo);
+    circulo(xLuz, yLuz, diamLuz);
+  }
+}
+
+// Sensor: blanco al tocar, y más claro cuanto más cerca está el ratón
+void dibujarSensor() {
+  if (tocando) {
+    fill(255);
+  } else {
+    fill(60 + media / 4);
+  }
+  circulo(xSensor, ySensor, diamSensor);
+}
+
+// Valores del sensor en la esquina (para depurar)
+void dibujarValores() {
+  fill(255);
+  text("Lectura: " + int(lectura), width * 0.03, height * 0.07);
+  text("Media: " + int(media), width * 0.03, height * 0.13);
 }
 
 // ===================================================================
