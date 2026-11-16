@@ -2,7 +2,13 @@
 boolean encendida = false;  // boolean: solo dos estados, encendida o apagada
 int brillo = 200;           // int: entero de 0 a 255, como un LED en Arduino
 color colorLuz;             // color: guarda un color RGB en una sola variable
+boolean vela = false;       // true si el efecto vela está activado
+float brilloVisible;        // brillo que se dibuja (con la vela, parpadea)
 float xLuz, yLuz, diamLuz;  // posición y tamaño de la luz
+
+// Colores de la lámpara, en un array (el doble toque pasa al siguiente)
+color[] colores = new color[4];
+int indiceColor = 0;
 
 // ===== Sensor =====
 float xSensor, ySensor, diamSensor;  // posición y tamaño del sensor
@@ -12,11 +18,21 @@ float media;                // valor filtrado (media de las últimas lecturas)
 // ===== Tocar =====
 float umbral = 700;           // por encima de este valor se considera que se toca
 boolean tocando = false;      // true mientras se toca el sensor
-boolean tocandoAntes = false; // si se tocaba en el frame anterior (debounce)
+boolean tocandoAntes = false; // si se tocaba en el frame anterior
 
 // ===== Filtro de media móvil =====
 float[] ultimas = new float[10];   // las 10 últimas lecturas
 int posicion = 0;                  // dónde se guarda la siguiente lectura
+
+// ===== Gestos (tiempos con millis()) =====
+int TIEMPO_MANTENER = 400;   // ms con el dedo encima para que cuente como "mantener"
+int TIEMPO_ENTRE_TOQUES = 400; // ms máximos entre toques de un doble/triple toque
+int inicioToque = 0;         // millis() cuando empezó el toque actual
+int finToque = 0;            // millis() cuando acabó el último toque
+int numToques = 0;           // toques cortos seguidos que llevamos
+boolean manteniendo = false; // true mientras se mantiene el dedo
+boolean subiendo = true;     // dirección del brillo en el próximo "mantener"
+String ultimoGesto = "-";    // nombre del último gesto (para depurar)
 
 
 void setup() {
@@ -32,23 +48,26 @@ void setup() {
   ySensor = height * 0.8;
   diamSensor = height * 0.12;
 
-  colorLuz = color(255, 190, 90);
+  colores[0] = color(255, 190, 90);   // cálido
+  colores[1] = color(255, 240, 210);  // neutro
+  colores[2] = color(140, 200, 255);  // frío
+  colores[3] = color(255, 100, 170);  // rosa
+  colorLuz = colores[0];
+
   textSize(height * 0.04);
 }
 
 // draw() se lee como una lista de pasos: primero decide, después dibuja
 void draw() {
-  // --- Decidir (el "cerebro": lo que se llevará a Arduino) ---
+  // --- Decidir ---
   lectura = anadirRuido(leerSensor());   // leer una vez por frame
   media = calcularMedia(lectura);        // filtrar el ruido
   tocando = estaTocando(media);          // ¿se toca?
-
-  if (empiezaToque(tocando, tocandoAntes)) {
-    cambiarEstado();                     // un toque = un cambio
-  }
+  reconocerGestos();                     // toque, doble, triple o mantener
   tocandoAntes = tocando;
+  brilloVisible = calcularBrilloVisible();
 
-  // --- Dibujar (solo pantalla: en Arduino será el LED) ---
+  // --- Dibujar ---
   background(20);
   dibujarHalo();
   dibujarLuz();
@@ -97,9 +116,66 @@ boolean estaTocando(float valor) {
   return valor > umbral;
 }
 
-// true solo en el frame en que empieza el toque (antes no, ahora sí): debounce
-boolean empiezaToque(boolean ahora, boolean antes) {
-  return ahora && !antes;
+// Reconoce los gestos midiendo el tiempo con millis():
+//  - mantener 0,4 s  -> sube o baja el brillo (al revés que la vez anterior)
+//  - 1 toque corto   -> encender / apagar
+//  - 2 toques        -> cambiar de color
+//  - 3 toques        -> efecto vela
+void reconocerGestos() {
+  // Empieza un toque: apuntamos cuándo
+  if (tocando && !tocandoAntes) {
+    inicioToque = millis();
+  }
+
+  // Dedo encima más de 0,4 s: es "mantener", no un toque
+  if (tocando && millis() - inicioToque >= TIEMPO_MANTENER) {
+    if (!manteniendo) {
+      manteniendo = true;
+      numToques = 0;                 // los toques de antes ya no cuentan
+      if (subiendo) {
+        ultimoGesto = "Mantener: subir brillo";
+      } else {
+        ultimoGesto = "Mantener: bajar brillo";
+      }
+    }
+    regularBrillo();
+  }
+
+  // Acaba un toque
+  if (!tocando && tocandoAntes) {
+    if (manteniendo) {
+      manteniendo = false;
+      subiendo = !subiendo;          // la próxima vez, al revés
+    } else {
+      numToques = numToques + 1;     // era un toque corto: lo contamos
+      finToque = millis();
+    }
+  }
+
+  // Si ya hace 0,4 s del último toque y no ha llegado otro, decidimos cuántos han sido
+  if (!tocando && numToques > 0 && millis() - finToque > TIEMPO_ENTRE_TOQUES) {
+    if (numToques == 1) {
+      ultimoGesto = "1 toque: encender/apagar";
+      cambiarEstado();
+    } else if (numToques == 2) {
+      ultimoGesto = "2 toques: color";
+      cambiarColor();
+    } else {
+      ultimoGesto = "3 toques: vela";
+      cambiarVela();
+    }
+    numToques = 0;
+  }
+}
+
+// Brillo que se ve: el normal, o con parpadeo si el efecto vela está activado
+float calcularBrilloVisible() {
+  if (vela) {
+    // noise() da valores suaves entre 0 y 1: la llama tiembla sin saltos bruscos
+    return brillo * (0.55 + 0.45 * noise(millis() * 0.008));
+  } else {
+    return brillo;
+  }
 }
 
 
@@ -124,6 +200,34 @@ void cambiarEstado() {
   }
 }
 
+// Pasa al siguiente color del array (solo encendida)
+void cambiarColor() {
+  if (encendida) {
+    indiceColor = (indiceColor + 1) % colores.length;
+    colorLuz = colores[indiceColor];
+  }
+}
+
+// Sube o baja el brillo un poco en cada frame mientras se mantiene (solo encendida)
+void regularBrillo() {
+  if (encendida) {
+    if (subiendo) {
+      brillo = brillo + 2;
+      if (brillo > 255) brillo = 255;
+    } else {
+      brillo = brillo - 2;
+      if (brillo < 30) brillo = 30;  // mínimo 30, si no parecería apagada
+    }
+  }
+}
+
+// Activa o desactiva el efecto vela (solo encendida)
+void cambiarVela() {
+  if (encendida) {
+    vela = !vela;
+  }
+}
+
 
 // =====================================================================
 // FUNCIONES QUE DIBUJAN
@@ -139,8 +243,8 @@ void circulo(float x, float y, float diametro) {
 void dibujarHalo() {
   if (encendida) {
     for (int i = 8; i > 0; i--) {
-      fill(colorLuz, brillo / (i * 3));
-      circulo(xLuz, yLuz, diamLuz * (1 + i * brillo / 2000.0));
+      fill(colorLuz, brilloVisible / (i * 3));
+      circulo(xLuz, yLuz, diamLuz * (1 + i * brilloVisible / 2000.0));
     }
   }
 }
@@ -150,7 +254,7 @@ void dibujarLuz() {
   fill(90);
   circulo(xLuz, yLuz, diamLuz);
   if (encendida) {
-    fill(colorLuz, brillo);
+    fill(colorLuz, brilloVisible);
     circulo(xLuz, yLuz, diamLuz);
   }
 }
@@ -165,11 +269,12 @@ void dibujarSensor() {
   circulo(xSensor, ySensor, diamSensor);
 }
 
-// Valores del sensor en la esquina (para depurar)
+// Valores y último gesto en la esquina (para depurar)
 void dibujarValores() {
   fill(255);
   text("Lectura: " + int(lectura), width * 0.03, height * 0.07);
   text("Media: " + int(media), width * 0.03, height * 0.13);
+  text("Gesto: " + ultimoGesto, width * 0.03, height * 0.19);
 }
 
 // ===================================================================
