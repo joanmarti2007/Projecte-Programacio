@@ -25,7 +25,7 @@
 
 | Función | Gesto | Respuesta de la luz | Por qué este gesto |
 |---|---|---|---|
-| Encender / apagar | Un toque corto (< 0,5 s) | Se enciende o se apaga | Es la acción más usada: le toca el gesto más sencillo, el mismo que cualquier lámpara táctil |
+| Encender / apagar | Un toque corto (< 0,4 s) | Se enciende o se apaga | Es la acción más usada: le toca el gesto más sencillo, el mismo que cualquier lámpara táctil |
 | Regular el brillo | Mantener el dedo (≥ 0,4 s), solo encendida | El brillo sube poco a poco mientras se mantiene; al soltar se queda. La siguiente vez baja (al revés que la última) | Es como los reguladores táctiles: la persona ve el cambio mientras lo hace y suelta cuando le gusta |
 | Cambiar de color | Doble toque, solo encendida | Pasa al siguiente color del array (cálido → neutro → frío → cálido) | Gesto conocido (doble click) y rápido; es una acción frecuente pero menos que encender |
 | Efecto vela | Triple toque, solo encendida | La luz empieza a temblar como una llama. Otro triple toque vuelve a luz fija | Función especial que se usa poco: un gesto más difícil evita activarla sin querer |
