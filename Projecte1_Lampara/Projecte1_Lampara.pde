@@ -4,21 +4,23 @@
 // Anthropic): propuso la estructura y el código, y lo hemos revisado,
 // probado y adaptado al enunciado.
 //
-// Visto en clase (presentaciones M1–M6):
-//  - Variables y tipos: int, float, boolean, String, operador % (M1)
-//  - fill, transparencia (4º valor), background, noStroke, ellipse/circle,
+// Visto en clase (presentaciones M1–M6 y problemas de los Temas 1–6):
+//  - Variables y tipos int, float, boolean, String; operador % (M1)
+//  - fill con transparencia, background, noStroke, ellipse/circle,
 //    width y height (M2)
-//  - Condicionales if/else, && , || y ! (M3)
-//  - Arrays y bucles for (M4)
-//  - Funciones con y sin retorno, y calcular la media de un array con una
-//    función (M6)
+//  - Condicionales if/else, &&, || y ! (M3, Tema 3)
+//  - Arrays y bucles for (M4, M5)
+//  - setup(), draw(), funciones con y sin retorno (return), random(),
+//    mousePressed() y keyPressed(), y calcular la media de un array con
+//    una función (M6, problemas Tema 6)
+//  - Tipo color, mouseX/mouseY y comprobar si el ratón está dentro de una
+//    figura con && (problemas Tema 6)
+//  - text(), textSize(), textAlign() y map(): usados en mis Challenges 3 y 4
 //
-// NO visto en clase (de la referencia de Processing / ayuda de Claude):
-//  - Tipo color y color(), text(), textSize(), mouseX/mouseY,
-//    la variable mousePressed y la variable key
+// NO visto en clase (referencia de Processing / ayuda de Claude):
 //  - dist(): distancia entre dos puntos           (leerSensor)
-//  - map(): pasar un valor de un rango a otro     (leerSensor)
-//  - millis(): tiempo desde que empieza el sketch (gestos; lo pide el enunciado)
+//  - millis(): tiempo desde que empieza el sketch (gestos; el enunciado
+//    pide investigarla en la referencia)
 //  - noise(): números aleatorios suaves           (efecto vela; también
 //    se usa en la pestaña Ruido, que da el profesor)
 //  - Media móvil con array circular (posicion % longitud)  -> Claude
@@ -122,7 +124,7 @@ float leerSensor() {
   } else if (d <= radio) {
     return 200;
   } else if (d < alcance) {
-    return map(d, alcance, radio, 0, 200);   // map(): referencia de Processing (no visto en clase)
+    return map(d, alcance, radio, 0, 200);
   } else {
     return 0;
   }
