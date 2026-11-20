@@ -1,3 +1,33 @@
+// ===================================================================
+// PROCEDENCIA DEL CÓDIGO
+// Este código se ha escrito con la ayuda de Claude (asistente de IA de
+// Anthropic): propuso la estructura y el código, y lo hemos revisado,
+// probado y adaptado al enunciado.
+//
+// Visto en clase (presentaciones M1–M6):
+//  - Variables y tipos: int, float, boolean, String, operador % (M1)
+//  - fill, transparencia (4º valor), background, noStroke, ellipse/circle,
+//    width y height (M2)
+//  - Condicionales if/else, && , || y ! (M3)
+//  - Arrays y bucles for (M4)
+//  - Funciones con y sin retorno, y calcular la media de un array con una
+//    función (M6)
+//
+// NO visto en clase (de la referencia de Processing / ayuda de Claude):
+//  - Tipo color y color(), text(), textSize(), mouseX/mouseY,
+//    la variable mousePressed y la variable key
+//  - dist(): distancia entre dos puntos           (leerSensor)
+//  - map(): pasar un valor de un rango a otro     (leerSensor)
+//  - millis(): tiempo desde que empieza el sketch (gestos; lo pide el enunciado)
+//  - noise(): números aleatorios suaves           (efecto vela; también
+//    se usa en la pestaña Ruido, que da el profesor)
+//  - Media móvil con array circular (posicion % longitud)  -> Claude
+//  - Debounce con tocandoAntes                              -> Claude
+//  - Reconocimiento de gestos (toque, doble, triple, mantener) -> Claude
+//
+// La pestaña Ruido la proporciona el profesor (sin modificar).
+// ===================================================================
+
 // ===== Estado de la lámpara =====
 boolean encendida = false;  // boolean: solo dos estados, encendida o apagada
 int brillo = 200;           // int: entero de 0 a 255, como un LED en Arduino
@@ -83,7 +113,7 @@ void draw() {
 // Simula el sensor con el ratón:
 // 0 lejos, de 0 a 200 al acercarse, 200 encima y 1000 con click encima
 float leerSensor() {
-  float d = dist(mouseX, mouseY, xSensor, ySensor);
+  float d = dist(mouseX, mouseY, xSensor, ySensor);   // dist(): referencia de Processing (no visto en clase)
   float radio = diamSensor / 2;
   float alcance = diamSensor * 2;        // empieza a notar a 2 diámetros
 
@@ -92,7 +122,7 @@ float leerSensor() {
   } else if (d <= radio) {
     return 200;
   } else if (d < alcance) {
-    return map(d, alcance, radio, 0, 200);
+    return map(d, alcance, radio, 0, 200);   // map(): referencia de Processing (no visto en clase)
   } else {
     return 0;
   }
@@ -100,6 +130,8 @@ float leerSensor() {
 
 // Guarda la lectura en el array (sustituye la más antigua)
 // y devuelve la media de las 10 últimas
+// La media de un array con una función es de clase (M6). Guardar las lecturas
+// en un array circular con % es idea de Claude (media móvil / rolling average).
 float calcularMedia(float nueva) {
   ultimas[posicion] = nueva;
   posicion = (posicion + 1) % ultimas.length;
@@ -121,8 +153,11 @@ boolean estaTocando(float valor) {
 //  - 1 toque corto   -> encender / apagar
 //  - 2 toques        -> cambiar de color
 //  - 3 toques        -> efecto vela
+// Lógica de gestos hecha con ayuda de Claude. millis(): referencia de Processing
+// (el enunciado pide investigarla).
 void reconocerGestos() {
   // Empieza un toque: apuntamos cuándo
+  // Comparar con el frame anterior (tocandoAntes) es el debounce: ayuda de Claude
   if (tocando && !tocandoAntes) {
     inicioToque = millis();
   }
@@ -172,6 +207,7 @@ void reconocerGestos() {
 float calcularBrilloVisible() {
   if (vela) {
     // noise() da valores suaves entre 0 y 1: la llama tiembla sin saltos bruscos
+    // noise(): referencia de Processing / ayuda de Claude (no visto en clase)
     return brillo * (0.55 + 0.45 * noise(millis() * 0.008));
   } else {
     return brillo;
