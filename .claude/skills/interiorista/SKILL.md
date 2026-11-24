@@ -60,3 +60,5 @@ Cuando el usuario elija una propuesta, entrega un plan de ejecución ordenado (p
 - Objetivo: añadir estanterías, luz y color.
 - **Las paredes se quedan todas en blanco.** El color se da solo con muebles, textiles, luces y cuadros.
 - **Guitarra eléctrica**: no va a la derecha del escritorio, porque chocaría con la puerta del armario. Va colgada en la pared, a los pies de la cama.
+- **Paleta elegida (v3)**: tranquila y moderna. Blanco, greige, beige arena, roble claro y acentos negro mate, con como mucho un toque de salvia apagado. Nada de terracota, mostaza ni colores vivos.
+- **Muebles**: preferir IKEA España con su referencia (formato XXX.XXX.XX), sacando el precio con WebSearch y marcándolo "a verificar".
