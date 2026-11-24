@@ -53,3 +53,10 @@ Herramienta: `mcp__Canva__generate-image` (cárgala con ToolSearch `select:mcp__
 ## 5. Cierre
 
 Cuando el usuario elija una propuesta, entrega un plan de ejecución ordenado (pintar → luz → muebles grandes → textiles → decoración) y ofrece publicarlo como página o documento compartible (moodboard + lista de compra + renders).
+
+## 6. Proyecto actual: decisiones del usuario
+
+- Habitación: cama individual bajo la ventana (cabecero contra la pared grande blanca), escritorio blanco con cajonera junto a la cama, armario blanco con puertas de cristal a la derecha del escritorio, segunda mesa con tablero perforado junto al radiador, dos puertas blancas con molduras, suelo de madera clara y paneles LED cuadrados en el techo. Fotos subidas a Canva: pared principal `MAHb23wAN94`, vista general `MAHb21QT2Mc`.
+- Objetivo: añadir estanterías, luz y color.
+- **Las paredes se quedan todas en blanco.** El color se da solo con muebles, textiles, luces y cuadros.
+- **Guitarra eléctrica**: no va a la derecha del escritorio, porque chocaría con la puerta del armario. Va colgada en la pared, a los pies de la cama.
