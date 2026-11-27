@@ -1,4 +1,5 @@
 """Coloca 4 pósters plafonados (sin marco, sobre tablero de 5 mm) encima del escritorio."""
+import os
 import sys
 import numpy as np
 from PIL import Image, ImageFilter
@@ -7,10 +8,10 @@ foto, salida, *posters = sys.argv[1:]
 base = Image.open(foto).convert("RGB")
 W, H = base.size
 
-ALTO = 262            # px ≈ 55 cm a la escala del escritorio (150 cm ≈ 720 px)
-HUECO = 22            # ≈ 4,5 cm entre pósters
+ALTO = int(os.environ.get("ALTO", 262))            # px ≈ 55 cm a la escala del escritorio (150 cm ≈ 720 px)
+HUECO = int(os.environ.get("HUECO", 22))            # ≈ 4,5 cm entre pósters
 CENTRO_X = 1155       # centro del escritorio
-BASE_Y = 905          # borde inferior ≈ 40 cm sobre la mesa
+BASE_Y = int(os.environ.get("BASE_Y", 905))          # borde inferior ≈ 40 cm sobre la mesa
 GROSOR = 4            # canto del plafonado visible desde abajo
 
 imgs = []
